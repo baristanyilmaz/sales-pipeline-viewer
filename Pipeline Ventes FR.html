@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronologie du Pipeline de Ventes</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px; /* Base font size */
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+        }
+
+        #timeline-container {
+            overflow: auto; /* Enables scrolling for the table */
+            max-width: 100%;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%; /* Table tries to fit container, but will expand if content is wider */
+            min-width: 1800px; /* Ensure table is wide enough for typical view with many columns */
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top; /* Align content to the top of cells */
+        }
+
+        /* Header styling */
+        thead th {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        /* Sticky header for task steps (top row) */
+        th.task-header {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+            z-index: 10; /* Above regular cells, below corner */
+            background-color: #e9ecef; /* Must have a background */
+            min-width: 140px; /* Minimum width for task columns */
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* Sticky header for roles (first column) */
+        th.role-header {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            left: 0;
+            z-index: 10; /* Above regular cells, below corner */
+            background-color: #f8f9fa; /* Must have a background */
+            min-width: 220px; /* Minimum width for role names */
+            font-weight: bold;
+        }
+
+        /* Sticky top-left corner cell */
+        th.sticky-corner {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 20; /* Highest z-index to be on top of other sticky headers */
+            background-color: #dee2e6; /* Slightly different to distinguish */
+        }
+        
+        td {
+            height: 80px; /* Give cells a consistent height */
+        }
+
+        .task-block {
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.875em; /* 14px if base is 16px */
+            color: #333333; /* Dark text for better contrast on light backgrounds */
+            text-align: center;
+            min-height: 60px; /* Minimum height for the block */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            word-wrap: break-word; /* Break long words if necessary */
+        }
+
+        /* Responsive considerations: On very small screens, text might be too small.
+           This setup relies on horizontal scrolling, which is generally acceptable for complex tables.
+        */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            th, td {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+            .task-block {
+                font-size: 0.8em;
+                min-height: 50px;
+                padding: 6px;
+            }
+            th.task-header {
+                min-width: 120px;
+            }
+            th.role-header {
+                min-width: 180px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Chronologie du Pipeline de Ventes</h1>
+    <div id="timeline-container">
+        <!-- Table will be generated here by JavaScript -->
+    </div>
+
+    <script>
+        const roles = [
+            "Responsable Commercial",
+            "Client",
+            "Back Office Commercial",
+            "Alexis",
+            "Atelier",
+            "Finance"
+        ];
+
+        const tasks = [
+            { id: 1, name: "Le Responsable Commercial envoie le DVV (Bon de Commande) au client.", shortName: "Envoi DVV", responsibleRole: "Responsable Commercial", color: "#87CEEB" },
+            { id: 2, name: "Le Client signe le DVV/CVV (Bon de Commande).", shortName: "Signature DVV/CVV", responsibleRole: "Client", color: "#98FB98" },
+            { id: 3, name: "Le Client envoie la copie signée du DVV/CVV.", shortName: "Envoi Copie Signée", responsibleRole: "Client", color: "#98FB98" },
+            { id: 4, name: "Le Back Office Commercial reçoit la copie signée du DVV/CVV (selon le manager/commercial, peut arriver via Responsable Commercial ou directement).", shortName: "Réception Copie Signée", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 5, name: "Le Back Office Commercial informe les membres concernés de l'équipe commerciale qui doivent s'occuper des commandes.", shortName: "Notification Équipe Vente", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 6, name: "Le Back Office Commercial lie le DVV au VN, met à jour le Fichier Maître (Master Sheet) et autres fichiers pertinents.", shortName: "Lien DVV, MàJ Fichiers", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 7, name: "Alexis valide le processus.", shortName: "Validation Processus", responsibleRole: "Alexis", color: "#FFA07A" },
+            { id: 8, name: "Le Back Office Commercial convertit le DVV en CVV.", shortName: "Conversion DVV en CVV", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 9, name: "Le Back Office Commercial envoie la commande à l'Atelier pour traitement.", shortName: "Envoi Cde Atelier", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 10, name: "Le Back Office Commercial ouvre un bon de commande fournisseur (PO).", shortName: "Ouverture PO", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 11, name: "L'Atelier commande les pièces nécessaires et la main-d'œuvre.", shortName: "Cde Pièces/MO", responsibleRole: "Atelier", color: "#DDA0DD" },
+            { id: 12, name: "Le Back Office Commercial collecte les papiers du véhicule, y compris l'accord de financement.", shortName: "Collecte Docs (inc. Fin.)", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 13, name: "Alexis réceptionne le véhicule en stock après le dédouanement.", shortName: "Réception Véhicule (Post-Douane)", responsibleRole: "Alexis", color: "#FFA07A" },
+            { id: 14, name: "L'Atelier effectue l'Inspection Avant Livraison (PDI) et la préparation du véhicule (délai entre 1 jour et 1 mois - à améliorer).", shortName: "PDI & Prépa (1-30j)", responsibleRole: "Atelier", color: "#DDA0DD" },
+            { id: 15, name: "Alexis immatricule le véhicule avec les documents reçus du Back Office Commercial.", shortName: "Immatriculation Véhicule", responsibleRole: "Alexis", color: "#FFA07A" },
+            { id: 16, name: "Le Back Office Commercial envoie la Carte Grise à l'Atelier.", shortName: "Envoi CG Atelier", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 17, name: "L'Atelier prépare le véhicule pour la livraison.", shortName: "Prépa Finale Livraison", responsibleRole: "Atelier", color: "#DDA0DD" },
+            { id: 18, name: "Le Back Office Commercial organise la livraison, contacte les Responsables Commerciaux, vérifie si la date de livraison est fixée, si les paiements sont organisés et si le véhicule est prêt.", shortName: "Orga. Livraison & Confirm.", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 19, name: "Les Responsables Commerciaux signent les bons de livraison (BL/PD) et les envoient au Back Office Commercial par courrier (original papier nécessaire, délai 1-3 jours).", shortName: "Signature & Envoi BL (1-3j)", responsibleRole: "Responsable Commercial", color: "#87CEEB" },
+            { id: 20, name: "Le Back Office Commercial envoie les papiers à la banque et attend le paiement. Si non payé, il relance la banque.", shortName: "Docs Banque & Suivi Pmt", responsibleRole: "Back Office Commercial", color: "#FFD700" },
+            { id: 21, name: "Le service Finance confirme la réception de l'argent.", shortName: "Confirmation Paiement", responsibleRole: "Finance", color: "#F0E68C" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('timeline-container');
+            if (!container) {
+                console.error("Timeline container not found!");
+                return;
+            }
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Create header row
+            const headerRow = document.createElement('tr');
+            
+            // Top-left sticky corner cell
+            const cornerTh = document.createElement('th');
+            cornerTh.classList.add('sticky-corner');
+            cornerTh.textContent = 'Rôle / Étape';
+            headerRow.appendChild(cornerTh);
+
+            // Task step headers
+            tasks.forEach(task => {
+                const taskTh = document.createElement('th');
+                taskTh.classList.add('task-header');
+                taskTh.textContent = `Étape ${task.id}`;
+                taskTh.setAttribute('title', `Étape ${task.id}: ${task.name}`); // Full task name on hover
+                headerRow.appendChild(taskTh);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create swimlane rows
+            roles.forEach(role => {
+                const roleRow = document.createElement('tr');
+                
+                // Role header cell (sticky left)
+                const roleTh = document.createElement('th');
+                roleTh.classList.add('role-header');
+                roleTh.textContent = role;
+                roleRow.appendChild(roleTh);
+
+                // Task cells for this role
+                tasks.forEach(task => {
+                    const cell = document.createElement('td');
+                    if (task.responsibleRole === role) {
+                        const taskBlock = document.createElement('div');
+                        taskBlock.classList.add('task-block');
+                        taskBlock.style.backgroundColor = task.color;
+                        taskBlock.textContent = task.shortName;
+                        taskBlock.setAttribute('title', task.name); // Full task name on hover for the block
+                        cell.appendChild(taskBlock);
+                    }
+                    // If not responsible, cell remains empty
+                    roleRow.appendChild(cell);
+                });
+                tbody.appendChild(roleRow);
+            });
+            table.appendChild(tbody);
+            container.appendChild(table);
+        });
+    </script>
+</body>
+</html>
